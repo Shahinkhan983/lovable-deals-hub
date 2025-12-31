@@ -1,4 +1,7 @@
 export { default as AddDealPage } from "./AddDealPage";
+export { default as FormRadioGroup } from "./components/FormRadioGroup";
+export { default as FormImageUpload } from "./components/FormImageUpload";
+export { default as FormDateTimePicker } from "./components/FormDateTimePicker";
 export { default as DealsSidebar } from "./components/DealsSidebar";
 export { default as DealsHeader } from "./components/DealsHeader";
 export { default as Breadcrumbs } from "./components/Breadcrumbs";
