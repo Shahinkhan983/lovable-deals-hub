@@ -12,6 +12,7 @@ import FormSection from "./components/FormSection";
 import FormInput from "./components/FormInput";
 import FormSelect from "./components/FormSelect";
 import FormTextarea from "./components/FormTextarea";
+import TieredPricingTable from "./components/TieredPricingTable";
 import FormRadioGroup from "./components/FormRadioGroup";
 import FormImageUpload from "./components/FormImageUpload";
 import FormDateTimePicker from "./components/FormDateTimePicker";
@@ -243,6 +244,9 @@ const AddDealPage = () => {
                   )}
                 </div>
               </FormSection>
+
+              {/* 7. Tiered Pricing */}
+              <TieredPricingTable />
 
               {/* 6. Validity & Limits */}
               <FormSection title="Validity & Limits">
