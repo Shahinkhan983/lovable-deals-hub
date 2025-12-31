@@ -1,6 +1,3 @@
-import { useState } from "react";
-import FormInput from "./FormInput";
-
 interface Tier {
   id: string;
   name: string;
@@ -9,18 +6,16 @@ interface Tier {
   value: string;
 }
 
-const TieredPricingTable = () => {
-  const [enabled, setEnabled] = useState(true);
-  const [tiers, setTiers] = useState<Tier[]>([
-    { id: "silver", name: "Silver", symbol: "AG", gradient: "from-gray-300 to-gray-400", value: "" },
-    { id: "gold", name: "Gold", symbol: "AU", gradient: "from-yellow-300 to-yellow-500", value: "" },
-    { id: "platinum", name: "Platinum", symbol: "PT", gradient: "from-slate-300 to-slate-400", value: "" },
-    { id: "titanium", name: "Titanium", symbol: "TI", gradient: "from-gray-700 to-gray-900", value: "" },
-    { id: "diamond", name: "Diamond", symbol: "DM", gradient: "from-cyan-300 to-blue-400", value: "" },
-  ]);
+interface TieredPricingTableProps {
+  enabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
+  tiers: Tier[];
+  onTiersChange: (tiers: Tier[]) => void;
+}
 
+const TieredPricingTable = ({ enabled, onEnabledChange, tiers, onTiersChange }: TieredPricingTableProps) => {
   const updateTierValue = (id: string, value: string) => {
-    setTiers(tiers.map(tier => 
+    onTiersChange(tiers.map(tier => 
       tier.id === id ? { ...tier, value } : tier
     ));
   };
@@ -33,7 +28,7 @@ const TieredPricingTable = () => {
           <input
             type="checkbox"
             checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
+            onChange={(e) => onEnabledChange(e.target.checked)}
             className="sr-only peer"
           />
           <div className="relative w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />

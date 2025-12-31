@@ -12,9 +12,10 @@ interface FormRadioGroupProps {
   onChange: (value: string) => void;
   hint?: string;
   required?: boolean;
+  error?: string;
 }
 
-const FormRadioGroup = ({ label, options, value, onChange, hint, required }: FormRadioGroupProps) => {
+const FormRadioGroup = ({ label, options, value, onChange, hint, required, error }: FormRadioGroupProps) => {
   return (
     <div className="flex flex-col gap-3">
       <label className="text-sm font-semibold text-foreground">
@@ -29,7 +30,8 @@ const FormRadioGroup = ({ label, options, value, onChange, hint, required }: For
               "flex items-center gap-2 px-4 py-2.5 rounded-lg border cursor-pointer transition-all",
               value === option.value
                 ? "border-primary bg-primary/10 text-foreground"
-                : "border-input bg-card text-muted-foreground hover:border-primary/50"
+                : "border-input bg-card text-muted-foreground hover:border-primary/50",
+              error && "border-destructive"
             )}
           >
             <input
@@ -54,7 +56,8 @@ const FormRadioGroup = ({ label, options, value, onChange, hint, required }: For
           </label>
         ))}
       </div>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {!error && hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 };

@@ -5,6 +5,10 @@ import "@fontsource/manrope/700.css";
 import "@fontsource/manrope/800.css";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
 import DealsSidebar from "./components/DealsSidebar";
 import DealsHeader from "./components/DealsHeader";
 import Breadcrumbs from "./components/Breadcrumbs";
@@ -17,6 +21,15 @@ import FormRadioGroup from "./components/FormRadioGroup";
 import FormImageUpload from "./components/FormImageUpload";
 import FormDateTimePicker from "./components/FormDateTimePicker";
 import { Button } from "@/components/ui/button";
+import { dealFormSchema, type DealFormData } from "./schemas/dealFormSchema";
+
+const defaultTiers = [
+  { id: "silver", name: "Silver", symbol: "AG", gradient: "from-gray-300 to-gray-400", value: "" },
+  { id: "gold", name: "Gold", symbol: "AU", gradient: "from-yellow-300 to-yellow-500", value: "" },
+  { id: "platinum", name: "Platinum", symbol: "PT", gradient: "from-slate-300 to-slate-400", value: "" },
+  { id: "titanium", name: "Titanium", symbol: "TI", gradient: "from-gray-700 to-gray-900", value: "" },
+  { id: "diamond", name: "Diamond", symbol: "DM", gradient: "from-cyan-300 to-blue-400", value: "" },
+];
 
 const AddDealPage = () => {
   const breadcrumbItems = [
@@ -25,11 +38,12 @@ const AddDealPage = () => {
     { label: "Create Deal" },
   ];
 
-  // Form state
-  const [applyFor, setApplyFor] = useState("all");
-  const [dealType, setDealType] = useState("percentage");
-  const [startDateTime, setStartDateTime] = useState("");
-  const [endDateTime, setEndDateTime] = useState("");
+  // Images state (separate from form as it handles File objects)
+  const [images, setImages] = useState<string[]>([]);
+
+  // Tiered pricing state
+  const [tieredEnabled, setTieredEnabled] = useState(true);
+  const [tiers, setTiers] = useState(defaultTiers);
 
   const currencyOptions = [
     { value: "USD", label: "USD - US Dollar" },
@@ -52,13 +66,53 @@ const AddDealPage = () => {
     { value: "voucher", label: "Voucher" },
   ];
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<DealFormData>({
+    resolver: zodResolver(dealFormSchema),
+    defaultValues: {
+      currency: "USD",
+      applyFor: "all",
+      dealType: "percentage",
+      validityDays: 7,
+      totalRedemptions: 0,
+      tieredPricingEnabled: true,
+      tiers: defaultTiers,
+    },
+  });
+
+  const applyFor = watch("applyFor");
+  const dealType = watch("dealType");
+  const startDateTime = watch("startDateTime");
+  const endDateTime = watch("endDateTime");
+
   const showFreeItemName = dealType === "free_item" || dealType === "bogo";
   const showMaxDiscount = dealType === "percentage";
   const showProductName = applyFor === "specific";
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
+  const onSubmit = (data: DealFormData) => {
+    // Include images and tiers in final data
+    const finalData = {
+      ...data,
+      images,
+      tieredPricingEnabled: tieredEnabled,
+      tiers: tieredEnabled ? tiers : [],
+    };
+    
+    console.log("Form submitted:", finalData);
+    toast.success("Deal created successfully!", {
+      description: `"${data.dealTitle}" has been saved.`,
+    });
+  };
+
+  const onError = () => {
+    toast.error("Please fix the errors in the form", {
+      description: "Some required fields are missing or invalid.",
+    });
   };
 
   return (
@@ -90,7 +144,7 @@ const AddDealPage = () => {
               </div>
             </div>
             
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <form onSubmit={handleSubmit(onSubmit, onError)} className="flex flex-col gap-6">
               {/* 1. Basic Information */}
               <FormSection title="Basic Information">
                 <div className="grid gap-6">
@@ -100,12 +154,16 @@ const AddDealPage = () => {
                       placeholder="Enter your business name"
                       type="text"
                       required
+                      {...register("businessName")}
+                      error={errors.businessName?.message}
                     />
                     <FormInput
                       label="Location Label"
                       placeholder="e.g. Downtown Branch"
                       type="text"
                       hint="Optional - helpful if you have multiple locations"
+                      {...register("locationLabel")}
+                      error={errors.locationLabel?.message}
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -114,16 +172,21 @@ const AddDealPage = () => {
                       placeholder="e.g. Summer Flash Sale 50% Off"
                       type="text"
                       required
+                      {...register("dealTitle")}
+                      error={errors.dealTitle?.message}
                     />
                     <FormSelect
                       label="Currency"
                       options={currencyOptions}
-                      defaultValue="USD"
+                      {...register("currency")}
+                      error={errors.currency?.message}
                     />
                   </div>
                   <FormTextarea
                     label="Description"
                     placeholder="Describe the terms and benefits of this deal..."
+                    {...register("description")}
+                    error={errors.description?.message}
                   />
                 </div>
               </FormSection>
@@ -134,6 +197,8 @@ const AddDealPage = () => {
                   label="Deal Images"
                   hint="Upload up to 5 images. Recommended size: 800x600px"
                   maxFiles={5}
+                  images={images}
+                  onImagesChange={setImages}
                 />
               </FormSection>
 
@@ -144,8 +209,9 @@ const AddDealPage = () => {
                     label="Apply For"
                     options={applyForOptions}
                     value={applyFor}
-                    onChange={setApplyFor}
+                    onChange={(value) => setValue("applyFor", value as "all" | "specific")}
                     hint="Choose whether this deal applies to all products or a specific one"
+                    error={errors.applyFor?.message}
                   />
                   
                   {showProductName && (
@@ -155,6 +221,8 @@ const AddDealPage = () => {
                       type="text"
                       required
                       hint="Required when applying deal to a specific product"
+                      {...register("productName")}
+                      error={errors.productName?.message}
                     />
                   )}
                 </div>
@@ -166,9 +234,9 @@ const AddDealPage = () => {
                   <FormSelect
                     label="Deal Type"
                     options={dealTypeOptions}
-                    value={dealType}
-                    onChange={(e) => setDealType(e.target.value)}
                     required
+                    {...register("dealType")}
+                    error={errors.dealType?.message}
                   />
                   
                   {showFreeItemName && (
@@ -180,6 +248,8 @@ const AddDealPage = () => {
                         ? "The item customers get free with their purchase" 
                         : "The free item included with this deal"
                       }
+                      {...register("freeItemName")}
+                      error={errors.freeItemName?.message}
                     />
                   )}
                 </div>
@@ -196,6 +266,8 @@ const AddDealPage = () => {
                       min="0"
                       step="0.01"
                       hint="The regular price before discount"
+                      {...register("originalPrice")}
+                      error={errors.originalPrice?.message}
                     />
                     <FormInput
                       label="Offer Price"
@@ -204,6 +276,8 @@ const AddDealPage = () => {
                       min="0"
                       step="0.01"
                       hint="The discounted price customers will pay"
+                      {...register("offerPrice")}
+                      error={errors.offerPrice?.message}
                     />
                   </div>
                   
@@ -219,6 +293,8 @@ const AddDealPage = () => {
                         ? "Enter a value between 0 and 100" 
                         : "The flat discount amount in selected currency"
                       }
+                      {...register("discountAmount")}
+                      error={errors.discountAmount?.message}
                     />
                     <FormInput
                       label="Minimum Spend"
@@ -227,6 +303,8 @@ const AddDealPage = () => {
                       min="0"
                       step="0.01"
                       hint="Minimum purchase amount to qualify for this deal"
+                      {...register("minimumSpend")}
+                      error={errors.minimumSpend?.message}
                     />
                   </div>
                   
@@ -239,6 +317,8 @@ const AddDealPage = () => {
                         min="0"
                         step="0.01"
                         hint="Cap on the discount amount (leave empty for no limit)"
+                        {...register("maxDiscount")}
+                        error={errors.maxDiscount?.message}
                       />
                     </div>
                   )}
@@ -246,7 +326,12 @@ const AddDealPage = () => {
               </FormSection>
 
               {/* 7. Tiered Pricing */}
-              <TieredPricingTable />
+              <TieredPricingTable
+                enabled={tieredEnabled}
+                onEnabledChange={setTieredEnabled}
+                tiers={tiers}
+                onTiersChange={setTiers}
+              />
 
               {/* 6. Validity & Limits */}
               <FormSection title="Validity & Limits">
@@ -257,8 +342,9 @@ const AddDealPage = () => {
                       placeholder="7"
                       type="number"
                       min="1"
-                      defaultValue={7}
                       hint="Number of days the deal remains valid after claiming"
+                      {...register("validityDays")}
+                      error={errors.validityDays?.message}
                     />
                     <FormInput
                       label="Total Redemptions"
@@ -266,32 +352,29 @@ const AddDealPage = () => {
                       type="number"
                       min="0"
                       hint="Maximum times this deal can be redeemed (0 = unlimited)"
+                      {...register("totalRedemptions")}
+                      error={errors.totalRedemptions?.message}
                     />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormDateTimePicker
                       label="Start Date & Time"
-                      value={startDateTime}
-                      onChange={setStartDateTime}
+                      value={startDateTime || ""}
+                      onChange={(value) => setValue("startDateTime", value)}
                       required
                       hint="When the deal becomes active"
+                      error={errors.startDateTime?.message}
                     />
                     <FormDateTimePicker
                       label="End Date & Time"
-                      value={endDateTime}
-                      onChange={setEndDateTime}
+                      value={endDateTime || ""}
+                      onChange={(value) => setValue("endDateTime", value)}
                       required
                       hint="When the deal expires"
+                      error={errors.endDateTime?.message}
                     />
                   </div>
-                  
-                  {startDateTime && endDateTime && new Date(endDateTime) <= new Date(startDateTime) && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>warning</span>
-                      End date must be after the start date
-                    </p>
-                  )}
                 </div>
               </FormSection>
               
@@ -307,8 +390,9 @@ const AddDealPage = () => {
                 <Button
                   type="submit"
                   className="h-11 px-8 font-bold shadow-lg shadow-primary/30"
+                  disabled={isSubmitting}
                 >
-                  Create Deal
+                  {isSubmitting ? "Creating..." : "Create Deal"}
                 </Button>
               </div>
             </form>
