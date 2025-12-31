@@ -85,10 +85,10 @@ const AddDealPage = () => {
     },
   });
 
-  const applyFor = watch("applyFor");
-  const dealType = watch("dealType");
-  const startDateTime = watch("startDateTime");
-  const endDateTime = watch("endDateTime");
+  const applyFor = watch("applyFor") ?? "all";
+  const dealType = watch("dealType") ?? "percentage";
+  const startDateTime = watch("startDateTime") ?? "";
+  const endDateTime = watch("endDateTime") ?? "";
 
   const showFreeItemName = dealType === "free_item" || dealType === "bogo";
   const showMaxDiscount = dealType === "percentage";
