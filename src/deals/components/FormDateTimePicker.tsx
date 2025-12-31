@@ -6,9 +6,10 @@ interface FormDateTimePickerProps {
   onChange: (value: string) => void;
   hint?: string;
   required?: boolean;
+  error?: string;
 }
 
-const FormDateTimePicker = ({ label, value, onChange, hint, required }: FormDateTimePickerProps) => {
+const FormDateTimePicker = ({ label, value, onChange, hint, required, error }: FormDateTimePickerProps) => {
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-semibold text-foreground">
@@ -22,10 +23,12 @@ const FormDateTimePicker = ({ label, value, onChange, hint, required }: FormDate
         className={cn(
           "w-full h-11 rounded-lg border border-input bg-card text-foreground px-4",
           "focus:border-primary focus:ring-1 focus:ring-primary outline-none",
-          "transition-colors"
+          "transition-colors",
+          error && "border-destructive focus:border-destructive focus:ring-destructive"
         )}
       />
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {!error && hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 };

@@ -1,14 +1,16 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface FormImageUploadProps {
   label: string;
   hint?: string;
   maxFiles?: number;
+  images: string[];
+  onImagesChange: (images: string[]) => void;
+  error?: string;
 }
 
-const FormImageUpload = ({ label, hint, maxFiles = 5 }: FormImageUploadProps) => {
-  const [images, setImages] = useState<string[]>([]);
+const FormImageUpload = ({ label, hint, maxFiles = 5, images, onImagesChange, error }: FormImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,12 +25,12 @@ const FormImageUpload = ({ label, hint, maxFiles = 5 }: FormImageUploadProps) =>
       }
     });
 
-    setImages((prev) => [...prev, ...newImages]);
+    onImagesChange([...images, ...newImages]);
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    onImagesChange(images.filter((_, i) => i !== index));
   };
 
   return (
@@ -59,7 +61,8 @@ const FormImageUpload = ({ label, hint, maxFiles = 5 }: FormImageUploadProps) =>
             className={cn(
               "w-24 h-24 rounded-lg border-2 border-dashed border-input",
               "flex flex-col items-center justify-center gap-1 cursor-pointer",
-              "hover:border-primary hover:bg-primary/5 transition-colors"
+              "hover:border-primary hover:bg-primary/5 transition-colors",
+              error && "border-destructive"
             )}
           >
             <span className="material-symbols-outlined text-muted-foreground" style={{ fontSize: 28 }}>
@@ -78,7 +81,8 @@ const FormImageUpload = ({ label, hint, maxFiles = 5 }: FormImageUploadProps) =>
         )}
       </div>
 
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {!error && hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 };
