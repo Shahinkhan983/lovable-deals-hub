@@ -4,12 +4,17 @@ import { cn } from "@/lib/utils";
 interface FormSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
   options: { value: string; label: string }[];
+  hint?: string;
+  required?: boolean;
 }
 
-const FormSelect = ({ label, options, className, ...props }: FormSelectProps) => {
+const FormSelect = ({ label, options, hint, required, className, ...props }: FormSelectProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-semibold text-foreground">{label}</label>
+      <label className="text-sm font-semibold text-foreground">
+        {label}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </label>
       <div className="relative">
         <select
           className={cn(
@@ -30,6 +35,7 @@ const FormSelect = ({ label, options, className, ...props }: FormSelectProps) =>
           <span className="material-symbols-outlined" style={{ fontSize: 20 }}>expand_more</span>
         </div>
       </div>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 };
