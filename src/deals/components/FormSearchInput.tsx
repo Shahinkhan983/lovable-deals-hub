@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, Check, MapPin } from "lucide-react";
+import { Search, Check } from "lucide-react";
 
 interface SearchResult {
   id: string;
@@ -22,12 +22,11 @@ interface FormSearchInputProps {
   results: SearchResult[];
   isLoading?: boolean;
   selectedId?: string;
-  onUseLocation?: () => void;
 }
 
 const FormSearchInput = ({
   label,
-  placeholder = "Search deal owners or vendors",
+  placeholder = "Search deal owners...",
   hint,
   required,
   error,
@@ -37,7 +36,6 @@ const FormSearchInput = ({
   results,
   isLoading,
   selectedId,
-  onUseLocation,
 }: FormSearchInputProps) => {
   const [open, setOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -146,14 +144,14 @@ const FormSearchInput = ({
                         )}>
                           {result.name}
                         </div>
-                        {result.activeDeals !== undefined && (
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {result.activeDeals} active deal{result.activeDeals !== 1 ? 's' : ''}
-                          </div>
-                        )}
-                        {result.email && !result.activeDeals && (
+                        {result.email && (
                           <div className="text-xs text-muted-foreground mt-0.5 truncate">
                             {result.email}
+                          </div>
+                        )}
+                        {result.activeDeals !== undefined && (
+                          <div className="text-xs text-muted-foreground/70 mt-0.5">
+                            {result.activeDeals} active deal{result.activeDeals !== 1 ? 's' : ''}
                           </div>
                         )}
                       </div>
@@ -173,28 +171,6 @@ const FormSearchInput = ({
               </ul>
             )}
           </div>
-          
-          {/* Footer with location option */}
-          {onUseLocation && (
-            <div className="border-t border-border/50">
-              <button
-                type="button"
-                onClick={() => {
-                  onUseLocation();
-                  setOpen(false);
-                }}
-                className={cn(
-                  "w-full px-5 py-3 flex items-center gap-3 text-sm",
-                  "text-primary font-medium",
-                  "hover:bg-primary/5 transition-colors duration-200",
-                  "focus:outline-none focus:bg-primary/5"
-                )}
-              >
-                <MapPin className="h-5 w-5" />
-                <span>Use my current location</span>
-              </button>
-            </div>
-          )}
         </PopoverContent>
       </Popover>
       

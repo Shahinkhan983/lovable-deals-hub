@@ -90,10 +90,6 @@ const AddDealPage = () => {
     setDealOwnerResults([]);
   };
 
-  const handleUseLocation = () => {
-    toast.info("Getting your current location...");
-    // Implement location-based search here
-  };
 
   const currencyOptions = [
     { value: "USD", label: "USD - US Dollar" },
@@ -200,7 +196,7 @@ const AddDealPage = () => {
                 <div className="grid gap-6">
                   <FormSearchInput
                     label="Deal Owner"
-                    placeholder="Search deal owners or vendors"
+                    placeholder="Search deal owners..."
                     hint="Search by name or email"
                     value={dealOwnerSearch}
                     onChange={handleDealOwnerSearch}
@@ -208,7 +204,6 @@ const AddDealPage = () => {
                     results={dealOwnerResults}
                     isLoading={isSearching}
                     selectedId={selectedOwnerId}
-                    onUseLocation={handleUseLocation}
                   />
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
