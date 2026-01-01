@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search } from "lucide-react";
+import { Search, Check, MapPin } from "lucide-react";
 
 interface SearchResult {
   id: string;
   name: string;
   email?: string;
+  activeDeals?: number;
 }
 
 interface FormSearchInputProps {
@@ -20,11 +21,13 @@ interface FormSearchInputProps {
   onSelect: (result: SearchResult) => void;
   results: SearchResult[];
   isLoading?: boolean;
+  selectedId?: string;
+  onUseLocation?: () => void;
 }
 
 const FormSearchInput = ({
   label,
-  placeholder = "Search...",
+  placeholder = "Search deal owners or vendors",
   hint,
   required,
   error,
@@ -33,14 +36,17 @@ const FormSearchInput = ({
   onSelect,
   results,
   isLoading,
+  selectedId,
+  onUseLocation,
 }: FormSearchInputProps) => {
   const [open, setOpen] = useState(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (value.length > 0 && results.length > 0) {
       setOpen(true);
-    } else {
+    } else if (value.length === 0) {
       setOpen(false);
     }
   }, [value, results]);
@@ -48,6 +54,12 @@ const FormSearchInput = ({
   const handleSelect = (result: SearchResult) => {
     onSelect(result);
     setOpen(false);
+  };
+
+  const handleInputFocus = () => {
+    if (value.length > 0 && results.length > 0) {
+      setOpen(true);
+    }
   };
 
   return (
@@ -59,65 +71,130 @@ const FormSearchInput = ({
       
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <div className="relative group">
+            <Search className={cn(
+              "absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 pointer-events-none transition-colors duration-200",
+              open ? "text-primary" : "text-muted-foreground group-hover:text-primary/70"
+            )} />
             <input
               ref={inputRef}
               type="text"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              onFocus={() => {
-                if (value.length > 0 && results.length > 0) {
-                  setOpen(true);
-                }
-              }}
+              onFocus={handleInputFocus}
               placeholder={placeholder}
               className={cn(
-                "w-full h-11 pl-10 pr-4 rounded-lg border bg-background text-foreground text-sm",
+                "w-full h-12 pl-12 pr-4 rounded-[25px] border-0 bg-background text-foreground text-sm",
                 "placeholder:text-muted-foreground",
-                "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary",
-                "transition-colors",
-                error ? "border-destructive" : "border-input"
+                "shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_4px_16px_rgba(0,0,0,0.12)]",
+                "transition-all duration-300 ease-out",
+                error && "ring-2 ring-destructive/30"
               )}
             />
+            {selectedId && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <Check className="h-5 w-5 text-primary animate-in zoom-in-50 duration-200" />
+              </div>
+            )}
           </div>
         </PopoverTrigger>
         
         <PopoverContent 
-          className="w-[var(--radix-popover-trigger-width)] p-0"
+          className={cn(
+            "w-[var(--radix-popover-trigger-width)] p-0 rounded-2xl overflow-hidden",
+            "shadow-[0_8px_30px_rgba(0,0,0,0.12)] border-0 bg-background"
+          )}
           align="start"
-          sideOffset={4}
+          sideOffset={8}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="max-h-60 overflow-y-auto">
+          <div className="max-h-72 overflow-y-auto">
             {isLoading ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground">
-                Searching...
+              <div className="px-5 py-4 text-sm text-muted-foreground flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <span>Searching...</span>
               </div>
-            ) : results.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground">
-                No results found
+            ) : results.length === 0 && value.length > 0 ? (
+              <div className="px-5 py-4 text-sm text-muted-foreground">
+                No results found for "{value}"
               </div>
             ) : (
-              <ul className="py-1">
-                {results.map((result) => (
-                  <li
-                    key={result.id}
-                    onClick={() => handleSelect(result)}
-                    className={cn(
-                      "px-4 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground",
-                      "transition-colors text-sm"
-                    )}
-                  >
-                    <div className="font-medium text-foreground">{result.name}</div>
-                    {result.email && (
-                      <div className="text-xs text-muted-foreground">{result.email}</div>
-                    )}
-                  </li>
-                ))}
+              <ul className="py-2">
+                {results.map((result) => {
+                  const isSelected = selectedId === result.id;
+                  const isHovered = hoveredId === result.id;
+                  
+                  return (
+                    <li
+                      key={result.id}
+                      onClick={() => handleSelect(result)}
+                      onMouseEnter={() => setHoveredId(result.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      className={cn(
+                        "px-5 py-3 cursor-pointer flex items-center justify-between gap-3",
+                        "transition-all duration-200 ease-out",
+                        isSelected 
+                          ? "bg-primary/5" 
+                          : "hover:bg-accent/50"
+                      )}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className={cn(
+                          "font-semibold text-foreground truncate",
+                          isSelected && "text-primary"
+                        )}>
+                          {result.name}
+                        </div>
+                        {result.activeDeals !== undefined && (
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {result.activeDeals} active deal{result.activeDeals !== 1 ? 's' : ''}
+                          </div>
+                        )}
+                        {result.email && !result.activeDeals && (
+                          <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {result.email}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className={cn(
+                        "flex-shrink-0 transition-all duration-200",
+                        (isSelected || isHovered) ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                      )}>
+                        <Check className={cn(
+                          "h-5 w-5",
+                          isSelected ? "text-primary" : "text-muted-foreground"
+                        )} />
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
+          
+          {/* Footer with location option */}
+          {onUseLocation && (
+            <div className="border-t border-border/50">
+              <button
+                type="button"
+                onClick={() => {
+                  onUseLocation();
+                  setOpen(false);
+                }}
+                className={cn(
+                  "w-full px-5 py-3 flex items-center gap-3 text-sm",
+                  "text-primary font-medium",
+                  "hover:bg-primary/5 transition-colors duration-200",
+                  "focus:outline-none focus:bg-primary/5"
+                )}
+              >
+                <MapPin className="h-5 w-5" />
+                <span>Use my current location</span>
+              </button>
+            </div>
+          )}
         </PopoverContent>
       </Popover>
       
