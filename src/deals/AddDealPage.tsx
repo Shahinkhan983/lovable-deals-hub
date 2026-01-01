@@ -48,8 +48,9 @@ const AddDealPage = () => {
 
   // Deal owner search state
   const [dealOwnerSearch, setDealOwnerSearch] = useState("");
-  const [dealOwnerResults, setDealOwnerResults] = useState<{ id: string; name: string; email?: string }[]>([]);
+  const [dealOwnerResults, setDealOwnerResults] = useState<{ id: string; name: string; email?: string; activeDeals?: number }[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string | undefined>();
 
   // Mock search function - replace with actual API call
   const handleDealOwnerSearch = (query: string) => {
@@ -64,11 +65,11 @@ const AddDealPage = () => {
     // Simulate API delay
     setTimeout(() => {
       const mockUsers = [
-        { id: "1", name: "John Smith", email: "john.smith@example.com" },
-        { id: "2", name: "Jane Doe", email: "jane.doe@example.com" },
-        { id: "3", name: "Bob Johnson", email: "bob.johnson@example.com" },
-        { id: "4", name: "Alice Williams", email: "alice.w@example.com" },
-        { id: "5", name: "Charlie Brown", email: "charlie.b@example.com" },
+        { id: "1", name: "John Smith", email: "john.smith@example.com", activeDeals: 12 },
+        { id: "2", name: "Jane Doe", email: "jane.doe@example.com", activeDeals: 8 },
+        { id: "3", name: "Bob Johnson", email: "bob.johnson@example.com", activeDeals: 3 },
+        { id: "4", name: "Alice Williams", email: "alice.w@example.com", activeDeals: 25 },
+        { id: "5", name: "Charlie Brown", email: "charlie.b@example.com", activeDeals: 1 },
       ];
       
       const filtered = mockUsers.filter(
@@ -81,11 +82,17 @@ const AddDealPage = () => {
     }, 300);
   };
 
-  const handleDealOwnerSelect = (result: { id: string; name: string; email?: string }) => {
+  const handleDealOwnerSelect = (result: { id: string; name: string; email?: string; activeDeals?: number }) => {
     setDealOwnerSearch(result.name);
     setValue("dealOwnerId", result.id);
     setValue("dealOwnerName", result.name);
+    setSelectedOwnerId(result.id);
     setDealOwnerResults([]);
+  };
+
+  const handleUseLocation = () => {
+    toast.info("Getting your current location...");
+    // Implement location-based search here
   };
 
   const currencyOptions = [
@@ -193,13 +200,15 @@ const AddDealPage = () => {
                 <div className="grid gap-6">
                   <FormSearchInput
                     label="Deal Owner"
-                    placeholder="Search for a deal owner..."
+                    placeholder="Search deal owners or vendors"
                     hint="Search by name or email"
                     value={dealOwnerSearch}
                     onChange={handleDealOwnerSearch}
                     onSelect={handleDealOwnerSelect}
                     results={dealOwnerResults}
                     isLoading={isSearching}
+                    selectedId={selectedOwnerId}
+                    onUseLocation={handleUseLocation}
                   />
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
