@@ -20,6 +20,7 @@ import TieredPricingTable from "./components/TieredPricingTable";
 import FormRadioGroup from "./components/FormRadioGroup";
 import FormImageUpload from "./components/FormImageUpload";
 import FormDateTimePicker from "./components/FormDateTimePicker";
+import FormSearchInput from "./components/FormSearchInput";
 import { Button } from "@/components/ui/button";
 import { dealFormSchema, type DealFormData } from "./schemas/dealFormSchema";
 
@@ -44,6 +45,48 @@ const AddDealPage = () => {
   // Tiered pricing state
   const [tieredEnabled, setTieredEnabled] = useState(true);
   const [tiers, setTiers] = useState(defaultTiers);
+
+  // Deal owner search state
+  const [dealOwnerSearch, setDealOwnerSearch] = useState("");
+  const [dealOwnerResults, setDealOwnerResults] = useState<{ id: string; name: string; email?: string }[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Mock search function - replace with actual API call
+  const handleDealOwnerSearch = (query: string) => {
+    setDealOwnerSearch(query);
+    
+    if (query.length < 2) {
+      setDealOwnerResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    // Simulate API delay
+    setTimeout(() => {
+      const mockUsers = [
+        { id: "1", name: "John Smith", email: "john.smith@example.com" },
+        { id: "2", name: "Jane Doe", email: "jane.doe@example.com" },
+        { id: "3", name: "Bob Johnson", email: "bob.johnson@example.com" },
+        { id: "4", name: "Alice Williams", email: "alice.w@example.com" },
+        { id: "5", name: "Charlie Brown", email: "charlie.b@example.com" },
+      ];
+      
+      const filtered = mockUsers.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query.toLowerCase()) ||
+          (user.email && user.email.toLowerCase().includes(query.toLowerCase()))
+      );
+      setDealOwnerResults(filtered);
+      setIsSearching(false);
+    }, 300);
+  };
+
+  const handleDealOwnerSelect = (result: { id: string; name: string; email?: string }) => {
+    setDealOwnerSearch(result.name);
+    setValue("dealOwnerId", result.id);
+    setValue("dealOwnerName", result.name);
+    setDealOwnerResults([]);
+  };
 
   const currencyOptions = [
     { value: "USD", label: "USD - US Dollar" },
@@ -148,6 +191,17 @@ const AddDealPage = () => {
               {/* 1. Basic Information */}
               <FormSection title="Basic Information">
                 <div className="grid gap-6">
+                  <FormSearchInput
+                    label="Deal Owner"
+                    placeholder="Search for a deal owner..."
+                    hint="Search by name or email"
+                    value={dealOwnerSearch}
+                    onChange={handleDealOwnerSearch}
+                    onSelect={handleDealOwnerSelect}
+                    results={dealOwnerResults}
+                    isLoading={isSearching}
+                  />
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormInput
                       label="Business Name"

@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const dealFormSchema = z.object({
   // Basic Information
+  dealOwnerId: z.string().optional(),
+  dealOwnerName: z.string().optional(),
   businessName: z.string().min(1, "Business name is required").max(100, "Max 100 characters"),
   locationLabel: z.string().max(100, "Max 100 characters").optional(),
   dealTitle: z.string().min(1, "Deal title is required").max(150, "Max 150 characters"),
