@@ -70,7 +70,10 @@ const FormSearchInput = ({
         {required && <span className="text-destructive ml-1">*</span>}
       </label>
       
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(isOpen) => {
+        // Only allow closing via onOpenChange, not opening (we handle open via input events)
+        if (!isOpen) setOpen(false);
+      }}>
         <PopoverTrigger asChild>
           <div className="relative">
             <Search className={cn(
@@ -83,7 +86,6 @@ const FormSearchInput = ({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               onFocus={() => setOpen(true)}
-              onClick={() => setOpen(true)}
               placeholder={placeholder}
               className={cn(
                 "w-full h-11 pl-10 pr-4 rounded-lg border bg-background text-foreground text-sm",
@@ -101,7 +103,6 @@ const FormSearchInput = ({
           align="start"
           sideOffset={4}
           onOpenAutoFocus={(e) => e.preventDefault()}
-          onInteractOutside={() => setOpen(false)}
         >
           {/* Header */}
           <div className="px-3 py-2 border-b bg-muted/30">
