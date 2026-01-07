@@ -50,7 +50,7 @@ const AddDealPage = () => {
   const [dealOwnerSearch, setDealOwnerSearch] = useState("");
   const [dealOwnerResults, setDealOwnerResults] = useState<{ id: string; name: string; email?: string; activeDeals?: number }[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedOwnerId, setSelectedOwnerId] = useState<string | undefined>();
+  const [selectedOwner, setSelectedOwner] = useState<{ id: string; name: string; email?: string; activeDeals?: number } | null>(null);
 
   // Mock search function - replace with actual API call
   const handleDealOwnerSearch = (query: string) => {
@@ -83,11 +83,18 @@ const AddDealPage = () => {
   };
 
   const handleDealOwnerSelect = (result: { id: string; name: string; email?: string; activeDeals?: number }) => {
-    setDealOwnerSearch(result.name);
+    setSelectedOwner(result);
+    setDealOwnerSearch("");
     setValue("dealOwnerId", result.id);
     setValue("dealOwnerName", result.name);
-    setSelectedOwnerId(result.id);
     setDealOwnerResults([]);
+  };
+
+  const handleDealOwnerClear = () => {
+    setSelectedOwner(null);
+    setDealOwnerSearch("");
+    setValue("dealOwnerId", "");
+    setValue("dealOwnerName", "");
   };
 
 
@@ -201,9 +208,10 @@ const AddDealPage = () => {
                     value={dealOwnerSearch}
                     onChange={handleDealOwnerSearch}
                     onSelect={handleDealOwnerSelect}
+                    onClear={handleDealOwnerClear}
                     results={dealOwnerResults}
                     isLoading={isSearching}
-                    selectedId={selectedOwnerId}
+                    selectedOwner={selectedOwner}
                   />
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
