@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 interface SearchResult {
   id: string;
@@ -19,9 +19,10 @@ interface FormSearchInputProps {
   value: string;
   onChange: (value: string) => void;
   onSelect: (result: SearchResult) => void;
+  onClear?: () => void;
   results: SearchResult[];
   isLoading?: boolean;
-  selectedId?: string;
+  selectedOwner?: SearchResult | null;
 }
 
 const FormSearchInput = ({
@@ -33,9 +34,10 @@ const FormSearchInput = ({
   value,
   onChange,
   onSelect,
+  onClear,
   results,
   isLoading,
-  selectedId,
+  selectedOwner,
 }: FormSearchInputProps) => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +46,12 @@ const FormSearchInput = ({
     onSelect(result);
     setOpen(false);
     inputRef.current?.blur();
+  };
+
+  const handleClear = () => {
+    onClear?.();
+    onChange("");
+    inputRef.current?.focus();
   };
 
   const getInitials = (name: string) => {
@@ -62,6 +70,45 @@ const FormSearchInput = ({
       </div>
     </div>
   );
+
+  // If owner is selected, show chip view
+  if (selectedOwner) {
+    return (
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium text-foreground">
+          {label}
+          {required && <span className="text-destructive ml-1">*</span>}
+        </label>
+        
+        <div className="flex items-center gap-2 p-2 rounded-lg border border-input bg-background min-h-11">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
+              {getInitials(selectedOwner.name)}
+            </div>
+            <span className="text-sm font-medium">{selectedOwner.name}</span>
+            {selectedOwner.email && (
+              <span className="text-xs text-primary/70">({selectedOwner.email})</span>
+            )}
+            <button
+              type="button"
+              onClick={handleClear}
+              className="ml-1 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+              aria-label="Remove selected owner"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        
+        {hint && !error && (
+          <p className="text-xs text-muted-foreground">{hint}</p>
+        )}
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -87,12 +134,10 @@ const FormSearchInput = ({
               }}
               onFocus={() => setOpen(true)}
               onBlur={(e) => {
-                // Don't close if clicking inside popover
                 const relatedTarget = e.relatedTarget as HTMLElement;
                 if (relatedTarget?.closest('[data-radix-popover-content-wrapper]')) {
                   return;
                 }
-                // Small delay to allow click events on popover items
                 setTimeout(() => setOpen(false), 150);
               }}
               placeholder={placeholder}
@@ -139,52 +184,44 @@ const FormSearchInput = ({
               </div>
             ) : (
               <ul className="py-1">
-                {results.map((result) => {
-                  const isSelected = selectedId === result.id;
-                  
-                  return (
-                    <li
-                      key={result.id}
-                      onClick={() => handleSelect(result)}
-                      className={cn(
-                        "px-3 py-2 cursor-pointer flex items-center gap-3",
-                        "hover:bg-accent transition-colors",
-                        isSelected && "bg-accent"
-                      )}
-                    >
-                      {/* Avatar */}
-                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary flex-shrink-0">
-                        {getInitials(result.name)}
-                      </div>
+                {results.map((result) => (
+                  <li
+                    key={result.id}
+                    onClick={() => handleSelect(result)}
+                    className={cn(
+                      "px-3 py-2 cursor-pointer flex items-center gap-3",
+                      "hover:bg-accent transition-colors"
+                    )}
+                  >
+                    {/* Avatar */}
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary flex-shrink-0">
+                      {getInitials(result.name)}
+                    </div>
 
-                      {/* Name + email */}
-                      <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className={cn(
-                            "text-sm font-medium truncate",
-                            isSelected ? "text-primary" : "text-foreground"
-                          )}>
-                            {result.name}
-                          </div>
-                          {result.email && (
-                            <div className="text-xs text-muted-foreground truncate">
-                              {result.email}
-                            </div>
-                          )}
-                          {result.activeDeals !== undefined && (
-                            <div className="text-xs text-muted-foreground/70">
-                              {result.activeDeals} active deal{result.activeDeals !== 1 ? "s" : ""}
-                            </div>
-                          )}
+                    {/* Name + email */}
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate text-foreground">
+                          {result.name}
                         </div>
-
-                        <span className="text-xs text-primary font-medium flex-shrink-0">
-                          Select
-                        </span>
+                        {result.email && (
+                          <div className="text-xs text-muted-foreground truncate">
+                            {result.email}
+                          </div>
+                        )}
+                        {result.activeDeals !== undefined && (
+                          <div className="text-xs text-muted-foreground/70">
+                            {result.activeDeals} active deal{result.activeDeals !== 1 ? "s" : ""}
+                          </div>
+                        )}
                       </div>
-                    </li>
-                  );
-                })}
+
+                      <span className="text-xs text-primary font-medium flex-shrink-0">
+                        Select
+                      </span>
+                    </div>
+                  </li>
+                ))}
               </ul>
             )}
           </div>
